@@ -9,9 +9,9 @@ import argparse
 import subprocess as sp
 import shutil
 
-
 import sc2
 
+from repocache import RepoCache
 
 def main():
     parser = argparse.ArgumentParser(description='Process some integers.')
@@ -41,14 +41,14 @@ def main():
     start_all = time.time()
     start = start_all
 
+    repocache = RepoCache()
+
     # Clone repos
     print("Cloning repositiories...")
     for i, repo in enumerate(args.repo):
+        repo_path = repocache.get(repo)
         container = containers / f"repo{i}"
-        sp.run(
-            ["git", "clone", repo, str(container)],
-            check=True, stdout=sp.DEVNULL, stderr=sp.DEVNULL
-        )
+        shutil.copytree(repo_path, container)
     print(f"Ok ({time.time() - start:.2f}s)")
 
     # Collect bot info
