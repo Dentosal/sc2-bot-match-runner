@@ -12,6 +12,7 @@ import shutil
 import sc2
 
 from repocache import RepoCache
+import read_replay
 
 def main():
     parser = argparse.ArgumentParser(description='Process some integers.')
@@ -44,7 +45,7 @@ def main():
     repocache = RepoCache()
 
     # Clone repos
-    print("Cloning repositiories...")
+    print("Fetching repositiories...")
     for i, repo in enumerate(args.repo):
         repo_path = repocache.get(repo)
         container = containers / f"repo{i}"
@@ -116,7 +117,31 @@ def main():
 
     print(f"Ok ({time.time() - start:.2f}s)")
 
-    print(f"Game ran, results collected (total {time.time() - start_all:.2f}s)")
+
+    start = time.time()
+    print("Collecting results...")
+    winner_info = None
+    for i, repo in enumerate(args.repo):
+        rp = containers / f"repo{i}" / "replay.SC2Replay"
+        winners = read_replay.winners(rp)
+        if winner_info is None:
+            winner_info = winners
+        else:
+            if winner_info != winners:
+                print(f"Conflicting winner information (repo{i})")
+                print(f"({winners !r})")
+
+    result_name = "+".join([RepoCache.repo_name(n) for n in args.repo])
+    result_dir = Path("Results") / result_name
+
+    result_dir.mkdir(parents=True)
+
+    with open(result_dir / "result.json", "w") as f:
+        json.dump(winner_info, f)
+
+    print(f"Ok ({time.time() - start:.2f}s)")
+
+    print(f"Completed (total {time.time() - start_all:.2f}s)")
 
 
 if __name__ == '__main__':

@@ -18,13 +18,12 @@ class RepoCache(object):
         if url.endswith(".git"):
             url = url[:-4]
 
-        owner, name = url.rsplit("/")[-2:]
+        owner, name = url.replace("+", "").rsplit("/")[-2:]
         while "__" in owner:
             owner = owner.replace("__", "_")
         return f"{owner}__{name}"
 
     def _clone(self, name, url):
-        print("CLONE")
         sp.run(
             ["git", "clone", url, name],
             cwd=self.PATH,
@@ -32,7 +31,6 @@ class RepoCache(object):
         )
 
     def _pull(self, name):
-        print("PULL")
         sp.run(
             ["git", "pull"],
             cwd=(self.PATH / name),
