@@ -39,6 +39,12 @@ def main():
         shutil.rmtree(containers)
     containers.mkdir()
 
+    # Create empty results/ directory (removes the old one)
+    results = Path("results")
+    if results.exists():
+        shutil.rmtree(results)
+    results.mkdir()
+
     start_all = time.time()
     start = start_all
 
@@ -131,13 +137,17 @@ def main():
                 print(f"Conflicting winner information (repo{i})")
                 print(f"({winners !r})")
 
+    # TODO: Assumes player_id == repo_index
+    # Might be possible to at least try to verify this assumption
+    winner_id = [player_id for player_id, victory in winner_info.items() if victory][0]
+
     result_name = "+".join([RepoCache.repo_name(n) for n in args.repo])
-    result_dir = Path("Results") / result_name
+    result_dir = Path("results") / result_name
 
     result_dir.mkdir(parents=True)
 
     with open(result_dir / "result.json", "w") as f:
-        json.dump(winner_info, f)
+        json.dump({"winner": f"repo{winner_id}"}, f)
 
     print(f"Ok ({time.time() - start:.2f}s)")
 
