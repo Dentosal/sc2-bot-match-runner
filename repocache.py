@@ -23,6 +23,9 @@ class RepoCache(object):
             owner = owner.replace("__", "_")
         return f"{owner}__{name}"
 
+    def latest_hash(self, url):
+        return sp.check_output(["git", "rev-parse", "HEAD"], cwd=self.PATH).strip().decode("utf-8")
+
     def _clone(self, name, url):
         sp.run(
             ["git", "clone", url, name],
