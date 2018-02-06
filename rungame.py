@@ -14,11 +14,26 @@ import sc2
 from repocache import RepoCache
 import read_replay
 
+def copy_contents(from_directory: Path, to_directory: Path):
+    for path in from_directory.iterdir():
+        fn = shutil.copy if path.is_file() else shutil.copytree
+        fn(path, to_directory)
+
+def dockerfile_replace(path, **kwargs):
+    with open(path) as f:
+        contents = f.read()
+
+    for k, v in kwargs.items():
+        contents = contents.replace(f"${k}", v)
+
+    with open(path, "w") as f:
+        f.write(contents)
+
 def main():
-    parser = argparse.ArgumentParser(description='Process some integers.')
-    parser.add_argument('--realtime', action='store_true', help='run in realtime mode')
-    parser.add_argument('map_name', type=str, help='map name')
-    parser.add_argument('repo', type=str, nargs="+", help='a list of repositories')
+    parser = argparse.ArgumentParser(description="Process some integers.")
+    parser.add_argument("--realtime", action="store_true", help="run in realtime mode")
+    parser.add_argument("map_name", type=str, help="map name")
+    parser.add_argument("repo", type=str, nargs="+", help="a list of repositories")
     args = parser.parse_args()
 
     if len(args.repo) != 2:
@@ -95,10 +110,45 @@ def main():
             cmd_args.append("--master")
         cmd_args += [args.map_name, races_arg, portconfig.as_json]
 
-        stdout_log = open(container / "stdout.log", "a")
-        stderr_log = open(container / "stderr.log", "a")
-        p = sp.Popen(cmd_args, stdout=stdout_log, stderr=stderr_log, cwd=container)
-        processes.append(p)
+        # stdout_log = open(container / "stdout.log", "a")
+        # stderr_log = open(container / "stderr.log", "a")
+        # stdout=stdout_log, stderr=stderr_log, cwd=container
+
+        copy_contents(Path("container_template"), container)
+        shutil.copytree(Path("/Users/dento/Desktop/python-sc2"), container / "python-sc2")
+        # HACK: using mount would be better, but it doesn't work is so slow that
+        #       it just seems to block forever.
+        # shutil.copytree(Path("StarCraftII"), container / "StarCraftII")
+
+        expose_ports = [portconfig.shared] + portconfig.players[i]
+        if i == 0:
+            expose_ports += portconfig.server
+
+
+        dockerfile_replace(container / "Dockerfile",
+            INDEX=str(i),
+            PORTS=" ".join(str(p) for p in expose_ports),
+            RUNCMD=json.dumps(cmd_args)
+        )
+
+        image_name =  f"repo{i}_{repocache.latest_hash(repo)}"
+        # process_name =  f"repo{i}_{repocache.latest_hash(repo)}"
+        process_name =  f"repo{i}_process"
+
+        sp.run(["docker", "rm", process_name], cwd=container, check=False)
+        sp.run(["docker", "build", "-t", image_name, "."], cwd=container, check=True)
+        sp.run([
+            "docker", "run", "-d",
+            "--mount", ",".join(map("=".join, {
+                "type": "bind",
+                "source": str(Path("StarCraftII").resolve(strict=True)),
+                "destination": "/StarCraftII",
+                "readonly": "false",
+                "consistency": "cached"
+            }.items())),
+            "--name", process_name,
+            image_name
+        ], cwd=container, check=True)
 
     print(f"Ok ({time.time() - start:.2f}s)")
 
@@ -129,13 +179,22 @@ def main():
     winner_info = None
     for i, repo in enumerate(args.repo):
         rp = containers / f"repo{i}" / "replay.SC2Replay"
-        winners = read_replay.winners(rp)
+        try:
+            winners = read_replay.winners(rp)
+        except FileNotFoundError:
+            print(f"Process repo{i} didn't record a replay")
+            continue
+
         if winner_info is None:
             winner_info = winners
         else:
             if winner_info != winners:
                 print(f"Conflicting winner information (repo{i})")
                 print(f"({winners !r})")
+
+    if winner_info is None:
+        print("No replays were recorded by any process")
+        exit(1)
 
     # TODO: Assumes player_id == repo_index
     # Might be possible to at least try to verify this assumption
@@ -154,5 +213,5 @@ def main():
     print(f"Completed (total {time.time() - start_all:.2f}s)")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

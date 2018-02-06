@@ -5,6 +5,9 @@ containers/
 repocache/
 results/
 
+# Starcaft II binary
+StarCraftII/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
