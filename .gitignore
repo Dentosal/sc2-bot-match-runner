@@ -4,6 +4,7 @@ containers/
 # Directories
 repocache/
 results/
+replays/
 
 # Starcaft II binary
 StarCraftII/
