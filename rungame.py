@@ -1,6 +1,8 @@
 #!python3
 # usage: ./rungame.py [args] repo1 repo2
 
+PROCESS_POLL_INTERVAL = 3 # seconds
+
 from pathlib import Path
 import random
 import time
@@ -60,7 +62,10 @@ def main():
 
     repocache = RepoCache()
 
-    MATCHES = [[args.repo[0], args.repo[1]]]
+    MATCHES = [
+        [args.repo[0], args.repo[1]],
+        [args.repo[0], args.repo[1]]
+    ]
 
     # Clone repos and create match folders
     print("Fetching repositiories...")
@@ -98,7 +103,6 @@ def main():
 
     races_by_match = [[b["race"] for b in info] for info in botinfo_by_match]
 
-    processes = []
     start = time.time()
     print("Starting games...")
     for i_match, repos in enumerate(MATCHES):
@@ -115,7 +119,7 @@ def main():
         # shutil.copytree(Path("StarCraftII"), container / "StarCraftII")
 
         image_name =  f"sc2_repo{0}_vs_repo{1}_image"
-        process_name =  f"sc2_repo{0}_vs_repo{1}"
+        process_name =  f"sc2_match{i_match}"
 
         sp.run(["docker", "rm", process_name], cwd=container, check=False)
         sp.run(["docker", "build", "-t", image_name, "."], cwd=container, check=True)
@@ -147,59 +151,64 @@ def main():
     start = time.time()
     print("Running game...")
     while True:
-        return_codes = []
-        for i, p in enumerate(processes):
-            return_code = p.poll()
-            if return_code is None:
-                continue
-            return_codes.append(return_code)
+        docker_process_ids = sp.check_output([
+            "docker", "ps", "-q",
+            "--filter", f"volume={Path('StarCraftII').resolve(strict=True)}"
+        ]).split()
 
-        if len(return_codes) == len(processes):
+        if len(docker_process_ids) == 0:
             break
 
-        time.sleep(1)
-
-    for i, rc in enumerate(return_codes):
-        if rc != 0:
-            print(f"Process  match{i} terminated with non-zero exit code ({rc})")
+        time.sleep(PROCESS_POLL_INTERVAL)
 
     print(f"Ok ({time.time() - start:.2f}s)")
 
-    exit()
-
     start = time.time()
     print("Collecting results...")
-    winner_info = None
+    winners = []
     for i_match, repos in enumerate(MATCHES):
-        rp = containers / f"repo{i}" / "replay.SC2Replay"
-        try:
-            winners = read_replay.winners(rp)
-        except FileNotFoundError:
-            print(f"Process repo{i} didn't record a replay")
-            continue
+        winner_info = None
+
+        for i, repo in enumerate(repos):
+            try:
+                replay_winners = read_replay.winners(replays / f"{i_match}_{i}.SC2Replay")
+            except FileNotFoundError:
+                print(f"Process match{i_match}:repo{i} didn't record a replay")
+                continue
+
+            if winner_info is None:
+                winner_info = replay_winners
+            elif winner_info != replay_winners:
+                print(f"Conflicting winner information (match{i_match}:repo{i})")
+                print(f"({replay_winners !r})")
+                print(f"({winner_info !r})")
 
         if winner_info is None:
-            winner_info = winners
-        else:
-            if winner_info != winners:
-                print(f"Conflicting winner information (repo{i})")
-                print(f"({winners !r})")
+            print("No replays were recorded by either client")
+            exit(1)
 
-    if winner_info is None:
-        print("No replays were recorded by any process")
-        exit(1)
+        # TODO: Assumes player_id == repo_index
+        # Might be possible to at least try to verify this assumption
+        for player_id, victory in winner_info.items():
+            if victory:
+                winners.append(player_id)
+                break
+        else: # Tie
+            winners.append(None)
 
-    # TODO: Assumes player_id == repo_index
-    # Might be possible to at least try to verify this assumption
-    winner_id = [player_id for player_id, victory in winner_info.items() if victory][0]
+    result_dir = Path("results")
+    result_dir.mkdir(parents=True, exist_ok=True)
 
-    result_name = "+".join([RepoCache.repo_name(n) for n in args.repo])
-    result_dir = Path("results") / result_name
+    result_data = [
+        {
+            "winner": winner_id,
+            "repositories": MATCHES[i_match]
+        }
+        for i_match, winner_id in enumerate(winners)
+    ]
 
-    result_dir.mkdir(parents=True)
-
-    with open(result_dir / "result.json", "w") as f:
-        json.dump({"winner": f"repo{winner_id}"}, f)
+    with open(result_dir / "results.json", "w") as f:
+        json.dump(result_data, f)
 
     print(f"Ok ({time.time() - start:.2f}s)")
 
