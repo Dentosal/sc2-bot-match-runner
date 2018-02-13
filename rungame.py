@@ -23,7 +23,8 @@ def prepend_all(prefix, container):
     return [r for item in container for r in [prefix, item]]
 
 def main():
-    parser = argparse.ArgumentParser(description="Process some integers.")
+    parser = argparse.ArgumentParser(description="Automatically run sc2 matches and collect results.")
+    parser.add_argument("--noupdate", action="store_true", help="do not update cached repositories")
     parser.add_argument("--realtime", action="store_true", help="run in realtime mode")
     parser.add_argument("map_name", type=str, help="map name")
     parser.add_argument("repo", type=str, nargs="+", help="a list of repositories")
@@ -72,7 +73,7 @@ def main():
     for i_match, repos in enumerate(MATCHES):
         container = containers / f"match{i_match}"
         for i, repo in enumerate(repos):
-            repo_path = repocache.get(repo)
+            repo_path = repocache.get(repo, pull=(not args.noupdate))
             shutil.copytree(repo_path, container / f"repo{i}")
 
     print(f"Ok ({time.time() - start:.2f}s)")

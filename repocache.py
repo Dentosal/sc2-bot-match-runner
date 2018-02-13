@@ -40,13 +40,14 @@ class RepoCache(object):
             check=True, stdout=sp.DEVNULL, stderr=sp.DEVNULL
         )
 
-    def _ensure_newest(self, name, url):
+    def _download(self, name, url, pull=True):
         if (self.PATH / name).exists():
-            self._pull(name)
+            if pull:
+                self._pull(name)
         else:
             self._clone(name, url)
 
-    def get(self, url):
+    def get(self, url, pull=True):
         name = RepoCache.repo_name(url)
-        self._ensure_newest(name, url)
+        self._download(name, url, pull)
         return self.PATH / name
