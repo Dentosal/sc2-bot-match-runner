@@ -53,24 +53,24 @@ def main():
     results.mkdir()
 
     # Create empty results/ directory (removes the old one)
-    replays = Path("replays")
-    if replays.exists():
-        shutil.rmtree(replays)
-    replays.mkdir()
+    result_dir = Path("results")
+    if result_dir.exists():
+        shutil.rmtree(result_dir)
+    result_dir.mkdir()
 
     start_all = time.time()
     start = start_all
 
     repocache = RepoCache()
 
-    MATCHES = [
+    matches = [
         [args.repo[0], args.repo[1]],
         [args.repo[0], args.repo[1]]
     ]
 
     # Clone repos and create match folders
     print("Fetching repositiories...")
-    for i_match, repos in enumerate(MATCHES):
+    for i_match, repos in enumerate(matches):
         container = containers / f"match{i_match}"
         for i, repo in enumerate(repos):
             repo_path = repocache.get(repo, pull=(not args.noupdate))
@@ -80,7 +80,7 @@ def main():
 
     # Collect bot info
     botinfo_by_match = []
-    for i_match, repos in enumerate(MATCHES):
+    for i_match, repos in enumerate(matches):
         botinfo_by_match.append([])
         container = containers / f"match{i_match}"
         for i, repo in enumerate(repos):
@@ -106,7 +106,7 @@ def main():
 
     start = time.time()
     print("Starting games...")
-    for i_match, repos in enumerate(MATCHES):
+    for i_match, repos in enumerate(matches):
         container = containers / f"match{i_match}"
 
         # stdout_log = open(container / "stdout.log", "a")
@@ -138,7 +138,7 @@ def main():
             }.items())),
             "--mount", ",".join(map("=".join, {
                 "type": "bind",
-                "source": str(Path("replays").resolve(strict=True)),
+                "source": str(result_dir.resolve(strict=True)),
                 "destination": "/replays",
                 "readonly": "false",
                 "consistency": "consistent"
@@ -167,12 +167,13 @@ def main():
     start = time.time()
     print("Collecting results...")
     winners = []
-    for i_match, repos in enumerate(MATCHES):
+    record_ok = []
+    for i_match, repos in enumerate(matches):
         winner_info = None
 
         for i, repo in enumerate(repos):
             try:
-                replay_winners = read_replay.winners(replays / f"{i_match}_{i}.SC2Replay")
+                replay_winners = read_replay.winners(result_dir / f"{i_match}_{i}.SC2Replay")
             except FileNotFoundError:
                 print(f"Process match{i_match}:repo{i} didn't record a replay")
                 continue
@@ -184,9 +185,12 @@ def main():
                 print(f"({replay_winners !r})")
                 print(f"({winner_info !r})")
 
+
         if winner_info is None:
-            print("No replays were recorded by either client")
-            exit(1)
+            print(f"No replays were recorded by either client (match{i_match})")
+            record_ok.append(False)
+            winners.append(None)
+            continue
 
         # TODO: Assumes player_id == repo_index
         # Might be possible to at least try to verify this assumption
@@ -196,16 +200,15 @@ def main():
                 break
         else: # Tie
             winners.append(None)
-
-    result_dir = Path("results")
-    result_dir.mkdir(parents=True, exist_ok=True)
+        record_ok.append(True)
 
     result_data = [
         {
-            "winner": winner_id,
-            "repositories": MATCHES[i_match]
+            "record_ok": record_ok[i_match],
+            "winner": winners[i_match],
+            "repositories": matches[i_match]
         }
-        for i_match, winner_id in enumerate(winners)
+        for i_match in range(len(matches))
     ]
 
     with open(result_dir / "results.json", "w") as f:
