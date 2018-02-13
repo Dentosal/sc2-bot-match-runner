@@ -24,8 +24,10 @@ commands = [
 
 if os.fork() == 0:
     commands[-1] += ["--master"]
+    commands[-1] += ["--log-path", f"/replays/{gameid}_0.log"]
     commands[-1] += ["--replay-path", f"/replays/{gameid}_0.SC2Replay"]
     os.execlp("runuser", "-l", "user0", "-c", " && ".join(" ".join(shlex.quote(c) for c in cmd) for cmd in commands))
 else:
+    commands[-1] += ["--log-path", f"/replays/{gameid}_1.log"]
     commands[-1] += ["--replay-path", f"/replays/{gameid}_1.SC2Replay"]
     os.execlp("runuser", "-l", "user1", "-c", " && ".join(" ".join(shlex.quote(c) for c in cmd) for cmd in commands))
