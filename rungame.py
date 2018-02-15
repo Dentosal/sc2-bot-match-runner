@@ -52,6 +52,11 @@ def main():
     sp.call("./downloadlinuxpackage.sh")
     # TODO: args.realtime
 
+    sc2_linux_dir = Path("StarCraftII").resolve(strict=True)
+    if (not (sc2_linux_dir / "Maps").exists()) or list((sc2_linux_dir / "Maps").iterdir()) == []:
+        print("Error: Linux SC2 directory doesn't contain any maps")
+        exit(2)
+
     containers = create_empty_dir("containers")
     result_dir = create_empty_dir("results")
 
@@ -127,7 +132,7 @@ def main():
             *prepend_all("--env", [f"{k}={v}" for k,v in env.items()]),
             "--mount", ",".join(map("=".join, {
                 "type": "bind",
-                "source": str(Path("StarCraftII").resolve(strict=True)),
+                "source": str(sc2_linux_dir),
                 "destination": "/StarCraftII",
                 "readonly": "true",
                 "consistency": "cached"
@@ -150,7 +155,7 @@ def main():
     while True:
         docker_process_ids = sp.check_output([
             "docker", "ps", "-q",
-            "--filter", f"volume={Path('StarCraftII').resolve(strict=True)}"
+            "--filter", f"volume={sc2_linux_dir}"
         ]).split()
 
         if len(docker_process_ids) == 0:
