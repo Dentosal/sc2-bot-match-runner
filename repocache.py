@@ -51,3 +51,6 @@ class RepoCache(object):
         name = RepoCache.repo_name(url)
         self._download(name, url, pull)
         return self.PATH / name
+
+    def get_cached(self, url):
+        return (self.PATH / RepoCache.repo_name(url)).resolve(strict=True)
