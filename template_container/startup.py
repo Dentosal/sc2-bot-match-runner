@@ -22,6 +22,9 @@ commands = [
     ]
 ]
 
+if "sc2_step_time_limit" in os.environ:
+    commands[-1] += ["--step-time-limit", os.environ["sc2_step_time_limit"]]
+
 if os.fork() == 0:
     commands[-1] += ["--master"]
     commands[-1] += ["--log-path", f"/replays/{gameid}_0.log"]

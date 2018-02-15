@@ -32,7 +32,11 @@ def create_empty_dir(path):
 def main():
     parser = argparse.ArgumentParser(description="Automatically run sc2 matches and collect results.")
     parser.add_argument("--noupdate", action="store_true", help="do not update cached repositories")
-    parser.add_argument("--realtime", action="store_true", help="run in realtime mode")
+
+    time_group = parser.add_mutually_exclusive_group()
+    time_group.add_argument("--realtime", action="store_true", help="run in realtime mode")
+    time_group.add_argument("--step-time-limit", nargs=1, default=None, help="step time limit in seconds")
+
     parser.add_argument("map_name", type=str, help="map name")
     parser.add_argument("repo", type=str, nargs="+", help="a list of repositories")
     args = parser.parse_args()
@@ -108,11 +112,19 @@ def main():
 
         sp.run(["docker", "rm", process_name], cwd=container, check=False)
         sp.run(["docker", "build", "-t", image_name, "."], cwd=container, check=True)
+
+        env = {
+            "sc2_match_id": str(i_match),
+            "sc2_map_name": args.map_name,
+            "sc2_races": ",".join(races_by_match[i_match]),
+        }
+
+        if args.step_time_limit is not None:
+            env["sc2_step_time_limit"] = str(float(args.step_time_limit[0]))
+
         sp.run([
             "docker", "run", "-d",
-            "--env", f"sc2_match_id={i_match}",
-            "--env", f"sc2_map_name={args.map_name}",
-            "--env", f"sc2_races={','.join(races_by_match[i_match])}",
+            *prepend_all("--env", [f"{k}={v}" for k,v in env.items()]),
             "--mount", ",".join(map("=".join, {
                 "type": "bind",
                 "source": str(Path("StarCraftII").resolve(strict=True)),
