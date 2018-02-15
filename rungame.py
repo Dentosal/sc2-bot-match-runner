@@ -23,11 +23,11 @@ def prepend_all(prefix, container):
     return [r for item in container for r in [prefix, item]]
 
 def create_empty_dir(path):
-    dir = Path("containers")
-    if dir.exists():
-        shutil.rmtree(dir)
-    dir.mkdir()
-    return dir
+    p = Path(path)
+    if p.exists():
+        shutil.rmtree(p)
+    p.mkdir()
+    return p
 
 def main():
     parser = argparse.ArgumentParser(description="Automatically run sc2 matches and collect results.")
