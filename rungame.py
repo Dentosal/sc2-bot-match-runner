@@ -37,10 +37,12 @@ def create_empty_dir(path):
     p = Path(path)
     if p.exists():
         shutil.rmtree(p)
-    p.mkdir()
+    p.mkdir(parents=True)
     return p
 
 def main():
+    TIME_START_MS = int(time.time()*1000) # milliseconds
+
     parser = argparse.ArgumentParser(description="Automatically run sc2 matches and collect results.")
     parser.add_argument("--noupdate", action="store_true", help="do not update cached repositories")
 
@@ -68,7 +70,7 @@ def main():
         exit(2)
 
     containers = create_empty_dir("containers")
-    result_dir = create_empty_dir("results")
+    result_dir = create_empty_dir(Path("results") / str(TIME_START_MS))
 
     start_all = time.time()
     start = start_all
