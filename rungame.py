@@ -1,5 +1,5 @@
-#!python3
-# usage: ./rungame.py [args] repo1 repo2
+#!/usr/bin/env python3
+# for usage run: ./rungame.py --help
 
 PROCESS_POLL_INTERVAL = 3 # seconds
 
@@ -50,7 +50,6 @@ def main():
             exit(2)
 
     sp.call("./downloadlinuxpackage.sh")
-    # TODO: args.realtime
 
     sc2_linux_dir = Path("StarCraftII").resolve(strict=True)
     if (not (sc2_linux_dir / "Maps").exists()) or list((sc2_linux_dir / "Maps").iterdir()) == []:
@@ -126,6 +125,8 @@ def main():
 
         if args.step_time_limit is not None:
             env["sc2_step_time_limit"] = str(float(args.step_time_limit[0]))
+
+        # TODO: args.realtime
 
         sp.run([
             "docker", "run", "-d",
