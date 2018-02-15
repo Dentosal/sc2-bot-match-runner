@@ -25,3 +25,12 @@ export REPO1="https://github.com/raimohanska/python-sc2-bot-template.git"
 export REPO2="https://github.com/raimohanska/python-sc2-bot-template.git"
 python3 rungame.py "Abyssal Reef" $REPO1 $REPO2
 ```
+
+Results will be stored under the `results/` directory. It contains bot logs and replay files.
+
+If running gets stuck, you may want to
+
+```
+    docker ps
+    docker logs <container_id>
+```
