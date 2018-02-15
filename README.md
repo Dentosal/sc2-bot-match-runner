@@ -21,9 +21,9 @@ python3 rungame.py <map_name> <repo1> <repo2>
 For example
 
 ```
-export REPO1="https://github.com/raimohanska/python-sc2-bot-template.git"
-export REPO2="https://github.com/raimohanska/python-sc2-bot-template.git"
-python3 rungame.py "Abyssal Reef" $REPO1 $REPO2
+export REPO1="https://github.com/dentosal/python-sc2-bot-template.git"
+export REPO2="https://github.com/dentosal/python-sc2-bot.git"
+python3 rungame.py "Abyssal Reef LE" $REPO1 $REPO2
 ```
 
 Results will be stored under the `results/` directory. It contains bot logs and replay files.
