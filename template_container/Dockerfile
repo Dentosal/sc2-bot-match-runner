@@ -10,8 +10,7 @@ ADD . /app
 # Install needed packages
 RUN apt update -y
 RUN apt-get install -y python3-pip strace
-# RUN pip3 install --trusted-host pypi.python.org sc2
-RUN pip3 install -e python-sc2
+RUN pip3 install --trusted-host pypi.python.org sc2
 
 # Create users
 RUN useradd -ms /bin/bash user0

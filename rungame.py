@@ -108,15 +108,7 @@ def main():
     for i_match, repos in enumerate(matches):
         container = containers / f"match{i_match}"
 
-        # stdout_log = open(container / "stdout.log", "a")
-        # stderr_log = open(container / "stderr.log", "a")
-        # stdout=stdout_log, stderr=stderr_log, cwd=container
-
         copy_contents(Path("template_container"), container)
-        shutil.copytree(Path("/Users/dento/Desktop/python-sc2"), container / "python-sc2")
-        # HACK: using mount would be better, but it doesn't work is so slow that
-        #       it just seems to block forever.
-        # shutil.copytree(Path("StarCraftII"), container / "StarCraftII")
 
         image_name =  f"sc2_repo{0}_vs_repo{1}_image"
         process_name =  f"sc2_match{i_match}"
@@ -191,11 +183,12 @@ def main():
             winners.append(None)
             continue
 
-        # TODO: Assumes player_id == repo_index
+        # TODO: Assumes player_id == (repo_index + 1)
         # Might be possible to at least try to verify this assumption
         for player_id, victory in winner_info.items():
+            assert player_id >= 1
             if victory:
-                winners.append(player_id)
+                winners.append(player_id - 1)
                 break
         else: # Tie
             winners.append(None)
