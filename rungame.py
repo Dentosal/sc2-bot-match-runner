@@ -45,6 +45,7 @@ def main():
             print(f"Please use https url to repo, and not {repo}")
             exit(2)
 
+    sp.call("./downloadlinuxpackage.sh")
     # TODO: args.realtime
 
     containers = create_empty_dir("containers")

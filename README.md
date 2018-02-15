@@ -8,7 +8,6 @@ against each other. The repos are expected to contain a fork of the
 
 ```
 pip3 install -r requirements.txt
-./downloadlinuxpackage.sh
 ```
 
 ### Running a match
