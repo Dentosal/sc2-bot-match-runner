@@ -14,6 +14,17 @@ import shutil
 from repocache import RepoCache
 import read_replay
 
+class ImageName:
+    @staticmethod
+    def make(repocache, repos):
+        return "sc2_" + ".".join([f"{repocache.repo_name(repo)}__{repocache.latest_hash(repo)}" for repo in repos]).lower()
+
+    @staticmethod
+    def parse(name):
+        assert name.startswith("sc2_")
+        name = name[4:]
+        return [namedtuple(**zip(("repo", "commit_hash"), repo.rsplit("__", 1))) for repo in name.split(".")]
+
 def copy_contents(from_directory: Path, to_directory: Path):
     for path in from_directory.iterdir():
         fn = shutil.copy if path.is_file() else shutil.copytree
@@ -49,7 +60,7 @@ def main():
             print(f"Please use https url to repo, and not {repo}")
             exit(2)
 
-    sp.call("./downloadlinuxpackage.sh")
+    sp.run(["./downloadlinuxpackage.sh"], check=True)
 
     sc2_linux_dir = Path("StarCraftII").resolve(strict=True)
     if (not (sc2_linux_dir / "Maps").exists()) or list((sc2_linux_dir / "Maps").iterdir()) == []:
@@ -104,18 +115,23 @@ def main():
 
     races_by_match = [[b["race"] for b in info] for info in botinfo_by_match]
 
+
     start = time.time()
     print("Starting games...")
+    docker_images = sp.check_output(["docker", "image", "ls", "--format", "{{.Repository}}" "sc2_"]).decode("utf-8").split("\n")
     for i_match, repos in enumerate(matches):
         container = containers / f"match{i_match}"
 
         copy_contents(Path("template_container"), container)
 
-        image_name =  f"sc2_repo{0}_vs_repo{1}_image"
+        image_name = ImageName.make(repocache, repos)
         process_name =  f"sc2_match{i_match}"
 
+
         sp.run(["docker", "rm", process_name], cwd=container, check=False)
-        sp.run(["docker", "build", "-t", image_name, "."], cwd=container, check=True)
+
+        if image_name not in docker_images: # is this image is already built?
+            sp.run(["docker", "build", "-t", image_name, "."], cwd=container, check=True)
 
         env = {
             "sc2_match_id": str(i_match),
