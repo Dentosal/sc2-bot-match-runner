@@ -28,5 +28,5 @@ RUN chmod -R 700 /app/repo1
 RUN ln -s /app/repo0 /home/user0/repo
 RUN ln -s /app/repo1 /home/user1/repo
 
-# Run app.py when the container launches
+# Run startup.py when the container launches
 CMD python3 startup.py
