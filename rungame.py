@@ -22,6 +22,13 @@ def copy_contents(from_directory: Path, to_directory: Path):
 def prepend_all(prefix, container):
     return [r for item in container for r in [prefix, item]]
 
+def create_empty_dir(path):
+    dir = Path("containers")
+    if dir.exists():
+        shutil.rmtree(dir)
+    dir.mkdir()
+    return dir
+
 def main():
     parser = argparse.ArgumentParser(description="Automatically run sc2 matches and collect results.")
     parser.add_argument("--noupdate", action="store_true", help="do not update cached repositories")
@@ -40,23 +47,8 @@ def main():
 
     # TODO: args.realtime
 
-    # Create empty containers/ directory (removes the old one)
-    containers = Path("containers")
-    if containers.exists():
-        shutil.rmtree(containers)
-    containers.mkdir()
-
-    # Create empty results/ directory (removes the old one)
-    results = Path("results")
-    if results.exists():
-        shutil.rmtree(results)
-    results.mkdir()
-
-    # Create empty results/ directory (removes the old one)
-    result_dir = Path("results")
-    if result_dir.exists():
-        shutil.rmtree(result_dir)
-    result_dir.mkdir()
+    containers = create_empty_dir("containers")
+    result_dir = create_empty_dir("results")
 
     start_all = time.time()
     start = start_all
