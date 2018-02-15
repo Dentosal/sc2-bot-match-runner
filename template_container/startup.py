@@ -24,6 +24,8 @@ commands = [
 
 if "sc2_step_time_limit" in os.environ:
     commands[-1] += ["--step-time-limit", os.environ["sc2_step_time_limit"]]
+if "sc2_game_time_limit" in os.environ:
+    commands[-1] += ["--game-time-limit", os.environ["sc2_game_time_limit"]]
 
 if os.fork() == 0:
     commands[-1] += ["--master"]

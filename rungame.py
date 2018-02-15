@@ -45,17 +45,16 @@ def main():
 
     parser = argparse.ArgumentParser(description="Automatically run sc2 matches and collect results.")
     parser.add_argument("--noupdate", action="store_true", help="do not update cached repositories")
-
     time_group = parser.add_mutually_exclusive_group()
     time_group.add_argument("--realtime", action="store_true", help="run in realtime mode")
-    time_group.add_argument("--step-time-limit", nargs=1, default=None, help="step time limit in seconds")
-
+    time_group.add_argument("--step-time-limit", nargs=1, default=None, help="step time limit in realtime seconds")
+    parser.add_argument("--game-time-limit", nargs=1, default=None, help="game time limit in game seconds")
     parser.add_argument("map_name", type=str, help="map name")
     parser.add_argument("repo", type=str, nargs="+", help="a list of repositories")
     args = parser.parse_args()
 
-    if len(args.repo) != 2:
-        exit("There must be exactly two repositories.")
+    if len(args.repo) % 2 != 0:
+        exit(f"There must be even number of repositories ({len(args.repo)} is odd).")
 
     for repo in args.repo:
         if not repo.startswith("https://"):
@@ -78,7 +77,8 @@ def main():
     repocache = RepoCache()
 
     matches = [
-        [args.repo[0], args.repo[1]]
+        [args.repo[i], args.repo[i+1]]
+        for i in range(0, len(args.repo), 2)
     ]
 
     # Clone repos and create match folders
@@ -143,6 +143,9 @@ def main():
 
         if args.step_time_limit is not None:
             env["sc2_step_time_limit"] = str(float(args.step_time_limit[0]))
+
+        if args.game_time_limit is not None:
+            env["sc2_game_time_limit"] = str(float(args.game_time_limit[0]))
 
         # TODO: args.realtime
 
