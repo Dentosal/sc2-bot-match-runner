@@ -64,7 +64,6 @@ def main():
     repocache = RepoCache()
 
     matches = [
-        [args.repo[0], args.repo[1]],
         [args.repo[0], args.repo[1]]
     ]
 
