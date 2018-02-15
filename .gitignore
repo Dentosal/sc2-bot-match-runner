@@ -8,6 +8,7 @@ replays/
 
 # Starcaft II binary
 StarCraftII/
+/SC2*.zip
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

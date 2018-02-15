@@ -8,9 +8,8 @@ against each other. The repos are expected to contain a fork of the
 
 ```
 pip3 install -r requirements.txt
+./downloadlinuxpackage.sh
 ```
-
-Copy [Linux installation folder](https://github.com/Blizzard/s2client-proto#linux-packages) (download and unpack) to the local directory. Select the latest version.
 
 ### Running a match
 
