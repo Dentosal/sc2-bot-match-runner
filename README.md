@@ -2,7 +2,8 @@
 
 Tournament runner scripts for running Starcraft II Bots in different Git repos
 against each other. The repos are expected to contain a fork of the
-[`python-sc2-bot-template`](https://github.com/Dentosal/python-sc2-bot-template).
+[`python-sc2-bot-template`](https://github.com/Dentosal/python-sc2-bot-template). Runs matches in parallel 
+using docker containers.
 
 ### Setup
 
@@ -26,9 +27,19 @@ export REPO2="https://github.com/dentosal/python-sc2-bot.git"
 python3 rungame.py "Abyssal Reef LE" $REPO1 $REPO2
 ```
 
-You can run multiple pairs at once too!
+You can run multiple pairs at once too! The matches will be run in parallel in separate docker containers.
 
-Results will be stored under the `results/` directory. It contains bot logs and replay files.
+Results will be stored under the `results/<timestamp>` directory. 
+
+Bot logs will be produced into files in this directory in realtime.
+
+Each bot client will create its replay file into this directory after the match is over.
+This means that for each match there will be two essentially identical replay files. The runner verifies that
+the replays contain the same result.
+
+After all matches have finished, a `results.json` file will be created. It contains the result of all matches.
+
+### Debugging
 
 If running gets stuck, you may want to
 
