@@ -63,7 +63,7 @@ def copy_replays(args, target_dir):
                     names.append(json.load(f)["name"])
 
             target_path = target_dir / f"{timestamp_dir.name}_{'_vs_'.join(names)}.SC2Replay"
-            shutil.copy(timestamp_dir / f"{i_match}_0.SC2Replay", target_path)
+            shutil.copy2(timestamp_dir / f"{i_match}_0.SC2Replay", target_path)
 
             # WIP:
             # if args.use_bot_names:
