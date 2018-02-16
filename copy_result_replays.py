@@ -48,6 +48,9 @@ def copy_replays(args, target_dir):
     rc = repocache.RepoCache()
 
     for timestamp_dir in source_dir.iterdir():
+        if args.timestamp and timestamp_dir.name != args.timestamp[0]:
+            continue
+
         with open(timestamp_dir / "results.json") as f:
             results = json.load(f)
 
@@ -91,6 +94,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="Move and rename SC2 replay files")
     parser.add_argument("account_id", nargs="?", help="Account id")
     parser.add_argument("server_id", nargs="?", help="Server id")
+    parser.add_argument("--timestamp", nargs=1, default=None, help="specify run timestamp. Defaults to all timestamps.")
     # parser.add_argument("--use-bot-names", action="store_true", help="Use correct bot names in the replay")
     args = parser.parse_args()
 
