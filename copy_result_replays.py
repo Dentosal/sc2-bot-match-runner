@@ -1,7 +1,7 @@
 import argparse
 import platform
 assert platform.system() == "Darwin", "Currently only supported on macOS"
-
+import os
 import json
 import shutil
 from pathlib import Path
@@ -66,7 +66,14 @@ def copy_replays(args, target_dir):
                     names.append(json.load(f)["name"])
 
             target_path = target_dir / f"{timestamp_dir.name}_{'_vs_'.join(names)}.SC2Replay"
-            shutil.copy2(timestamp_dir / f"{i_match}_0.SC2Replay", target_path)
+            replay_file = timestamp_dir / f"{i_match}_0.SC2Replay"
+            if os.path.exists(replay_file):
+                shutil.copy2(replay_file, target_path)
+            else:
+                replay_file = timestamp_dir / f"{i_match}_1.SC2Replay"
+                shutil.copy2(replay_file, target_path)
+
+
 
             # WIP:
             # if args.use_bot_names:
