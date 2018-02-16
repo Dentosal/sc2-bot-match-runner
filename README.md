@@ -26,6 +26,8 @@ export REPO2="https://github.com/dentosal/python-sc2-bot.git"
 python3 rungame.py "Abyssal Reef LE" $REPO1 $REPO2
 ```
 
+You can run multiple pairs at once too!
+
 Results will be stored under the `results/` directory. It contains bot logs and replay files.
 
 If running gets stuck, you may want to
@@ -34,3 +36,22 @@ If running gets stuck, you may want to
     docker ps
     docker logs <container_id>
 ```
+
+### Generating match list from list of repo URLs
+
+```
+python3 make_matches.py --type round-robin $REPO1 $REPO2 $REPO3
+```
+
+### Viewing match replays
+
+The runner stores match results under `results/<timestamp>` directories. You can easily copy all the match replays
+into your StarCraft II installation directory using
+
+```
+    python3 copy_result_replays.py <accountid> <serverid>
+```
+
+You can find your accountid and serverid as directory names under `~/Library/Application Support/Blizzard/StarCraft II/Accounts`.
+
+Now you can open the replays using the Starcraft UI: they can be found in Replays.
