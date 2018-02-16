@@ -40,6 +40,40 @@ def create_empty_dir(path):
     p.mkdir(parents=True)
     return p
 
+def fetch_repositories(matches, containers_dir, repocache, noupdate):
+    """Clone repos and create match folders"""
+
+    for i_match, repos in enumerate(matches):
+        container = containers_dir / f"match{i_match}"
+        for i, repo in enumerate(repos):
+            repo_path = repocache.get(repo, pull=(not noupdate))
+            shutil.copytree(repo_path, container / f"repo{i}")
+
+def collect_bot_info(matches, containers_dir):
+    botinfo_by_match = []
+    for i_match, repos in enumerate(matches):
+        botinfo_by_match.append([])
+        container = containers_dir / f"match{i_match}"
+        for i, repo in enumerate(repos):
+            botinfo_file = container / f"repo{i}" / "botinfo.json"
+
+            if not botinfo_file.exists():
+                print(f"File botinfo.json is missing for repo{i}")
+                exit(3)
+
+            with open(botinfo_file) as f:
+                botinfo = json.load(f)
+
+            REQUIRED_KEYS = {"race": str, "name": str}
+            for k, t in REQUIRED_KEYS.items():
+                if k not in botinfo or not isinstance(botinfo[k], t):
+                    print(f"Invalid botinfo.json for repo{i}:")
+                    print(f"Key '{k}' missing, or type is not {t !r}")
+                    exit(3)
+
+            botinfo_by_match[-1].append(botinfo)
+    return botinfo_by_match
+
 def main():
     TIME_START_MS = int(time.time()*1000) # milliseconds
 
@@ -68,7 +102,7 @@ def main():
         print("Error: Linux SC2 directory doesn't contain any maps")
         exit(2)
 
-    containers = create_empty_dir("containers")
+    containers_dir = create_empty_dir("containers")
     result_dir = create_empty_dir(Path("results") / str(TIME_START_MS))
 
     start_all = time.time()
@@ -81,48 +115,23 @@ def main():
         for i in range(0, len(args.repo), 2)
     ]
 
-    # Clone repos and create match folders
     print("Fetching repositiories...")
-    for i_match, repos in enumerate(matches):
-        container = containers / f"match{i_match}"
-        for i, repo in enumerate(repos):
-            repo_path = repocache.get(repo, pull=(not args.noupdate))
-            shutil.copytree(repo_path, container / f"repo{i}")
-
+    start = time.time()
+    fetch_repositories(matches, containers_dir, repocache, noupdate=args.noupdate)
     print(f"Ok ({time.time() - start:.2f}s)")
 
-    # Collect bot info
-    botinfo_by_match = []
-    for i_match, repos in enumerate(matches):
-        botinfo_by_match.append([])
-        container = containers / f"match{i_match}"
-        for i, repo in enumerate(repos):
-            botinfo_file = container / f"repo{i}" / "botinfo.json"
 
-            if not botinfo_file.exists():
-                print(f"File botinfo.json is missing for repo{i}")
-                exit(3)
-
-            with open(botinfo_file) as f:
-                botinfo = json.load(f)
-
-            REQUIRED_KEYS = {"race": str, "name": str}
-            for k, t in REQUIRED_KEYS.items():
-                if k not in botinfo or not isinstance(botinfo[k], t):
-                    print(f"Invalid botinfo.json for repo{i}:")
-                    print(f"Key '{k}' missing, or type is not {t !r}")
-                    exit(3)
-
-            botinfo_by_match[-1].append(botinfo)
-
-    races_by_match = [[b["race"] for b in info] for info in botinfo_by_match]
-
-
+    print("Collecting bot info...")
     start = time.time()
+    botinfo_by_match = collect_bot_info(matches, containers_dir)
+    races_by_match = [[b["race"] for b in info] for info in botinfo_by_match]
+    print(f"Ok ({time.time() - start:.2f}s)")
+
     print("Starting games...")
+    start = time.time()
     docker_images = sp.check_output(["docker", "image", "ls", "--format", "{{.Repository}}" "sc2_"]).decode("utf-8").split("\n")
     for i_match, repos in enumerate(matches):
-        container = containers / f"match{i_match}"
+        container = containers_dir / f"match{i_match}"
 
         copy_contents(Path("template_container"), container)
 
@@ -172,8 +181,8 @@ def main():
 
     print(f"Ok ({time.time() - start:.2f}s)")
 
-    start = time.time()
     print("Running game...")
+    start = time.time()
     while True:
         docker_process_ids = sp.check_output([
             "docker", "ps", "-q",
@@ -187,8 +196,8 @@ def main():
 
     print(f"Ok ({time.time() - start:.2f}s)")
 
-    start = time.time()
     print("Collecting results...")
+    start = time.time()
     winners = []
     record_ok = []
     for i_match, repos in enumerate(matches):
