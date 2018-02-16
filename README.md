@@ -15,7 +15,7 @@ pip3 install -r requirements.txt
 Run the runner script like this:
 
 ```
-python3 rungame.py <map_name> <repo1> <repo2>
+python3 rungame.py <map_name> <repo1> <repo2> --step-time-limit 2.0 --game-time-limit 1200
 ```
 
 For example
