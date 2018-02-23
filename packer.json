@@ -23,15 +23,6 @@
   }],
   "provisioners": [
   {
-    "type": "shell-local",
-    "command": "./downloadlinuxpackage.sh"
-  },
-  {
-    "type": "file",
-    "source": "./StarCraftII",
-    "destination": "/home/ubuntu/StarCraftII"
-  },
-  {
     "type": "shell",
     "inline": [
       "sleep 30",
@@ -45,9 +36,20 @@
       "cd /home/ubuntu/",
       "git clone https://github.com/Dentosal/sc2-bot-match-runner.git",
       "cd sc2-bot-match-runner",
+      "mkdir -p StarCraftII",
       "sudo python3.6 -m pip install --upgrade pip",
       "sudo apt-get install -y python3.6-gdbm",
       "sudo usermod -a -G docker ubuntu"
     ]
-  }]
+  },
+  {
+    "type": "shell-local",
+    "command": "./downloadlinuxpackage.sh"
+  },
+  {
+    "type": "file",
+    "source": "./StarCraftII",
+    "destination": "/home/ubuntu/sc2-bot-match-runner/StarCraftII"
+  }
+  ]
 }
