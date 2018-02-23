@@ -27,18 +27,24 @@ class RepoCache(object):
         return sp.check_output(["git", "rev-parse", "HEAD"], cwd=self.PATH).strip().decode("utf-8")
 
     def _clone(self, name, url):
-        sp.run(
-            ["git", "clone", url, name],
-            cwd=self.PATH,
-            check=True, stdout=sp.DEVNULL, stderr=sp.DEVNULL
-        )
+        try:
+            sp.run(
+                ["git", "clone", url, name],
+                cwd=self.PATH,
+                check=True, stdout=sp.DEVNULL
+            )
+        except sp.CalledProcessError as err:
+            raise Exception("Error cloning repository {0}: {1}".format(name, err))
 
     def _pull(self, name):
-        sp.run(
-            ["git", "pull"],
-            cwd=(self.PATH / name),
-            check=True, stdout=sp.DEVNULL, stderr=sp.DEVNULL
-        )
+        try:
+            sp.run(
+                ["git", "pull"],
+                cwd=(self.PATH / name),
+                check=True, stdout=sp.DEVNULL
+            )
+        except sp.CalledProcessError as err:
+            raise Exception("Error pulling from repository {0}: {1}".format(name, err))
 
     def _download(self, name, url, pull=True):
         if (self.PATH / name).exists():
