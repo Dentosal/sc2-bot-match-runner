@@ -48,6 +48,24 @@ If running gets stuck, you may want to
     docker logs <container_id>
 ```
 
+To clean unused docker images and containers
+
+```
+   ./cleanup.sh
+```
+
+You can also deleted cached repositories, in case there's an issue with pulling automatically:
+
+```
+    rm -fr repocache
+```
+
+Cleaning up created containers:
+
+```
+    rm -fr containers
+```
+
 ### Generating match list from list of repo URLs
 
 ```
