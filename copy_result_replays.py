@@ -1,7 +1,7 @@
 import argparse
 import platform
 assert platform.system() == "Darwin", "Currently only supported on macOS"
-
+import os
 import json
 import shutil
 from pathlib import Path
@@ -48,6 +48,9 @@ def copy_replays(args, target_dir):
     rc = repocache.RepoCache()
 
     for timestamp_dir in source_dir.iterdir():
+        if args.timestamp and timestamp_dir.name != args.timestamp[0]:
+            continue
+
         with open(timestamp_dir / "results.json") as f:
             results = json.load(f)
 
@@ -63,7 +66,14 @@ def copy_replays(args, target_dir):
                     names.append(json.load(f)["name"])
 
             target_path = target_dir / f"{timestamp_dir.name}_{'_vs_'.join(names)}.SC2Replay"
-            shutil.copy2(timestamp_dir / f"{i_match}_0.SC2Replay", target_path)
+            replay_file = timestamp_dir / f"{i_match}_0.SC2Replay"
+            if os.path.exists(replay_file):
+                shutil.copy2(replay_file, target_path)
+            else:
+                replay_file = timestamp_dir / f"{i_match}_1.SC2Replay"
+                shutil.copy2(replay_file, target_path)
+
+
 
             # WIP:
             # if args.use_bot_names:
@@ -91,6 +101,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="Move and rename SC2 replay files")
     parser.add_argument("account_id", nargs="?", help="Account id")
     parser.add_argument("server_id", nargs="?", help="Server id")
+    parser.add_argument("--timestamp", nargs=1, default=None, help="specify run timestamp. Defaults to all timestamps.")
     # parser.add_argument("--use-bot-names", action="store_true", help="Use correct bot names in the replay")
     args = parser.parse_args()
 
