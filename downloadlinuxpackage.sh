@@ -13,7 +13,7 @@ else
     rm $ARCHIVE_NAME
 fi
 
-MAPS_NAME=Ladder2017Season3_Updated
+MAPS_NAME=Ladder2017Season3
 MAPS_FILE=Ladder2017Season3_Updated.zip
 MAPS_URL="http://blzdistsc2-a.akamaihd.net/MapPacks/$MAPS_FILE"
 
