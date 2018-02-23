@@ -129,7 +129,7 @@ def main():
 
     print("Starting games...")
     start = time.time()
-    docker_images = sp.check_output(["docker", "image", "ls", "--format", "{{.Repository}}" "sc2_"]).decode("utf-8").split("\n")
+    docker_images = sp.check_output(["docker", "image", "ls", "--format", "{{.Repository}}"]).decode("utf-8").split("\n")
     for i_match, repos in enumerate(matches):
         container = containers_dir / f"match{i_match}"
 
