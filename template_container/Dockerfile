@@ -29,4 +29,6 @@ RUN ln -s /app/repo0 /home/user0/repo
 RUN ln -s /app/repo1 /home/user1/repo
 
 # Run startup.py when the container launches
-CMD python3 startup.py
+# Hack: chown to ensure the bots have access to their respective output dirs. Without this,
+# the both dirs will be owned by user0 when running under Ubuntu
+CMD chown user0 /result0 && chown user1 /result1 && python3 startup.py
