@@ -11,7 +11,7 @@
     "source_ami_filter": {
       "filters": {
       "virtualization-type": "hvm",
-      "name": "ubuntu/images/*ubuntu-xenial-16.04-amd64-server-*",
+      "name": "ubuntu/images/*ubuntu-artful-17.10-amd64-server-*",
       "root-device-type": "ebs"
       },
       "owners": ["099720109477"],
@@ -22,34 +22,9 @@
     "ami_name": "starcraft-runner-{{timestamp}}"
   }],
   "provisioners": [
-  {
-    "type": "shell",
-    "inline": [
-      "sleep 30",
-      "sudo add-apt-repository -y ppa:jonathonf/python-3.6",
-      "sudo apt-get update",
-      "sudo apt-get install -y python3.6 python3-pip unzip python-apt",
-      "sudo apt-get install -y libltdl7",
-      "curl -O https://download.docker.com/linux/ubuntu/dists/xenial/pool/stable/amd64/docker-ce_17.12.0~ce-0~ubuntu_amd64.deb",
-      "sudo dpkg -i docker-ce_17.12.0~ce-0~ubuntu_amd64.deb",
-      "pip3 install --upgrade pip",
-      "cd /home/ubuntu/",
-      "git clone https://github.com/Dentosal/sc2-bot-match-runner.git",
-      "cd sc2-bot-match-runner",
-      "mkdir -p StarCraftII",
-      "sudo python3.6 -m pip install --upgrade pip",
-      "sudo apt-get install -y python3.6-gdbm",
-      "sudo usermod -a -G docker ubuntu"
-    ]
-  },
-  {
-    "type": "shell-local",
-    "command": "./downloadlinuxpackage.sh"
-  },
-  {
-    "type": "file",
-    "source": "./StarCraftII",
-    "destination": "/home/ubuntu/sc2-bot-match-runner/StarCraftII"
-  }
+    {
+      "type": "shell",
+      "script": "runner_linux_install.sh"
+    }
   ]
 }
