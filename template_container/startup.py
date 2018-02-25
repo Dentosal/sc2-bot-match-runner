@@ -29,13 +29,13 @@ if "sc2_game_time_limit" in os.environ:
 
 if os.fork() == 0:
     commands[-1] += ["--master"]
-    commands[-1] += ["--log-path", f"/replays/{gameid}_0.log"]
-    commands[-1] += ["--replay-path", f"/replays/{gameid}_0.SC2Replay"]
+    commands[-1] += ["--log-path", f"/result0/{gameid}_0.log"]
+    commands[-1] += ["--replay-path", f"/result0/{gameid}_0.SC2Replay"]
     os.execlp("runuser", "-l", "user0", "-c", " && ".join(" ".join(shlex.quote(c) for c in cmd) for cmd in commands))
 else:
     # HACK: Delay the joining client so the host has time to start up
     import time; time.sleep(5)
 
-    commands[-1] += ["--log-path", f"/replays/{gameid}_1.log"]
-    commands[-1] += ["--replay-path", f"/replays/{gameid}_1.SC2Replay"]
+    commands[-1] += ["--log-path", f"/result1/{gameid}_1.log"]
+    commands[-1] += ["--replay-path", f"/result1/{gameid}_1.SC2Replay"]
     os.execlp("runuser", "-l", "user1", "-c", " && ".join(" ".join(shlex.quote(c) for c in cmd) for cmd in commands))

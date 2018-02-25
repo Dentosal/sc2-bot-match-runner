@@ -131,6 +131,9 @@ def main():
     start = time.time()
     docker_images = sp.check_output(["docker", "image", "ls", "--format", "{{.Repository}}"]).decode("utf-8").split("\n")
     for i_match, repos in enumerate(matches):
+        match_dir = create_empty_dir(result_dir / f"match{i_match}")
+        result_dir_0 = create_empty_dir(match_dir / "0")
+        result_dir_1 = create_empty_dir(match_dir / "1")
         container = containers_dir / f"match{i_match}"
 
         copy_contents(Path("template_container"), container)
@@ -170,8 +173,15 @@ def main():
             }.items())),
             "--mount", ",".join(map("=".join, {
                 "type": "bind",
-                "source": str(result_dir.resolve(strict=True)),
-                "destination": "/replays",
+                "source": str(result_dir_0.resolve(strict=True)),
+                "destination": "/result0",
+                "readonly": "false",
+                "consistency": "consistent"
+            }.items())),
+            "--mount", ",".join(map("=".join, {
+                "type": "bind",
+                "source": str(result_dir_1.resolve(strict=True)),
+                "destination": "/result1",
                 "readonly": "false",
                 "consistency": "consistent"
             }.items())),
@@ -202,10 +212,11 @@ def main():
     record_ok = []
     for i_match, repos in enumerate(matches):
         winner_info = None
+        match_dir = result_dir / f"match{i_match}"
 
         for i, repo in enumerate(repos):
             try:
-                replay_winners = read_replay.winners(result_dir / f"{i_match}_{i}.SC2Replay")
+                replay_winners = read_replay.winners(match_dir / f"{i}" / f"{i_match}_{i}.SC2Replay")
             except FileNotFoundError:
                 print(f"Process match{i_match}:repo{i} didn't record a replay")
                 continue
