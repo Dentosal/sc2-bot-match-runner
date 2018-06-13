@@ -135,6 +135,9 @@ def main():
 
         copy_contents(Path("template_container"), container)
 
+        # To debug, copy python-sc2 into the container
+        # shutil.copytree(Path("python-sc2").resolve(strict=True), container / "python-sc2")
+
         image_name = ImageName.make(repocache, repos)
         process_name =  f"sc2_match{i_match}"
 

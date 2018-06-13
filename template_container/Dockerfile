@@ -12,6 +12,9 @@ RUN apt update -y
 RUN apt-get install -y python3-pip strace
 RUN pip3 install --trusted-host pypi.python.org sc2
 
+# Alterantive for debugging python-sc2 issues
+# RUN pip3 install -e python-sc2
+
 # Create users
 RUN useradd -ms /bin/bash user0
 RUN useradd -ms /bin/bash user1
