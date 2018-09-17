@@ -4,8 +4,6 @@ FROM ubuntu:17.10
 # Set the working directory to /app
 WORKDIR /app
 
-# Copy the current directory contents into the container at /app
-ADD . /app
 
 # Install needed packages
 RUN apt update -y
@@ -16,20 +14,26 @@ RUN pip3 install --trusted-host pypi.python.org sc2
 # RUN pip3 install -e python-sc2
 
 # Create users
-RUN useradd -ms /bin/bash user0
-RUN useradd -ms /bin/bash user1
+RUN useradd -ms /bin/bash user0 \
+	&& useradd -ms /bin/bash user1
 
-RUN ln -s /StarCraftII /home/user0/StarCraftII
-RUN ln -s /StarCraftII /home/user1/StarCraftII
+RUN groupadd -g 1500 sc2
 
-RUN chown -R user0 /app/repo0
-RUN chown -R user1 /app/repo1
+RUN gpasswd -a user0 sc2
+RUN gpasswd -a user1 sc2
 
-RUN chmod -R 700 /app/repo0
-RUN chmod -R 700 /app/repo1
+RUN ln -s /StarCraftII /home/user0/StarCraftII \
+	&& ln -s /StarCraftII /home/user1/StarCraftII
 
-RUN ln -s /app/repo0 /home/user0/repo
-RUN ln -s /app/repo1 /home/user1/repo
+# Copy the current directory contents into the container at /app
+ADD . /app
+
+RUN chown -R user0 /app/repo0 \
+	&& chown -R user1 /app/repo1 \
+	&& chmod -R 700 /app/repo0 \
+	&& chmod -R 700 /app/repo1 \
+	&& ln -s /app/repo0 /home/user0/repo \
+	&& ln -s /app/repo1 /home/user1/repo
 
 # Run startup.py when the container launches
-CMD python3 startup.py
+ENTRYPOINT python3 startup.py

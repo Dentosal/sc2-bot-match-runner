@@ -9,6 +9,11 @@ import sc2
 portconfig = sc2.portconfig.Portconfig()
 gameid = os.environ["sc2_match_id"]
 
+# Ensure SC2 gid and write permission
+os.chown("/replays", -1, 1500)
+os.chmod("/replays", 0o775)
+
+
 commands = [
     [
         "cd" # home directory
