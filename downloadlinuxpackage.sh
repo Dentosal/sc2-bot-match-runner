@@ -10,6 +10,11 @@ else
         curl -O $ARCHIVE_URL
     fi
     unzip -P iagreetotheeula $ARCHIVE_NAME
+    # Workaround for case sensitivity issue where SC2 API returns
+    # lowercase name
+    if [ ! -e "StarCraftII/maps" ]; then
+        ln -r -s StarCraftII/Maps StarCraftII/maps
+    fi
     rm $ARCHIVE_NAME
 fi
 
